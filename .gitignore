@@ -1,0 +1,8 @@
+node_modules/
+
+# Lead data contains real people's names, emails and phone numbers.
+# Keep it out of git — regenerate it by running the pipeline instead.
+agencies_raw.json
+agencies_enriched.json
+agency_leads.csv
+*.csv

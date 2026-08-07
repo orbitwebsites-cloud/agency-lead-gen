@@ -1,0 +1,14 @@
+{
+  "name": "agency-lead-gen",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sources US marketing agencies from OpenStreetMap open data, enriches with owner + contact info from their own sites, and exports a scored lead list.",
+  "scripts": {
+    "harvest": "node 1_harvest_osm.mjs",
+    "enrich": "node 2_enrich.mjs",
+    "export": "node 3_verify_export.mjs",
+    "all": "node 1_harvest_osm.mjs && node 2_enrich.mjs && node 3_verify_export.mjs"
+  },
+  "engines": { "node": ">=18" }
+}
