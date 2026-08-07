@@ -7,7 +7,11 @@ const CONCURRENCY = 14;
 const TIMEOUT_MS = 12000;
 const UA = 'Mozilla/5.0 (compatible; agency-research/1.0; +mailto:orbitwebsites@gmail.com)';
 
-const PATHS = ['', '/about', '/about-us', '/team', '/our-team', '/contact', '/contact-us', '/leadership'];
+// Order matters: we cap fetches per site to be polite, so the highest-yield pages
+// must come first. /contact is the primary email source and was previously being
+// starved by the cap when a site had several /about-style pages.
+const PATHS = ['', '/contact', '/about', '/team', '/contact-us', '/about-us', '/our-team', '/leadership'];
+const MAX_PAGES = 6;
 
 // Signals that this is genuinely a marketing/SEO/ads/creative agency
 const AGENCY_KEYWORDS = [
@@ -119,7 +123,7 @@ async function enrichOne(rec) {
   for (const p of PATHS) {
     const html = await fetchWithTimeout(base + p);
     if (html) pages.push({ path: p || '/', html });
-    if (pages.length >= 4) break; // enough signal; don't hammer small sites
+    if (pages.length >= MAX_PAGES) break; // enough signal; don't hammer small sites
   }
   if (pages.length === 0) return { ...rec, status: 'unreachable' };
 
@@ -165,15 +169,26 @@ async function enrichOne(rec) {
 
 // ---- run with a concurrency pool + resume support ----
 const raw = JSON.parse(readFileSync('agencies_raw.json', 'utf8'));
-const done = existsSync('agencies_enriched.json')
+const prior = existsSync('agencies_enriched.json')
   ? JSON.parse(readFileSync('agencies_enriched.json', 'utf8'))
   : [];
-const doneDomains = new Set(done.map((d) => d.domain));
-const todo = raw.filter((r) => !doneDomains.has(r.domain));
 
-console.log(`Enriching ${todo.length} agencies (${done.length} already done), concurrency ${CONCURRENCY}\n`);
+// --refresh-missing-email: re-crawl sites we reached but got no email from.
+// Useful after changing PATHS/MAX_PAGES, without redoing the whole run.
+const REFRESH = process.argv.includes('--refresh-missing-email');
+const needsRefresh = (d) =>
+  REFRESH && d.status === 'ok' && !d.email_personal && !d.email_role;
 
-const results = [...done];
+const keep = prior.filter((d) => !needsRefresh(d));
+const keepDomains = new Set(keep.map((d) => d.domain));
+const todo = raw.filter((r) => !keepDomains.has(r.domain));
+
+if (REFRESH) {
+  console.log(`Refresh mode: re-crawling ${prior.length - keep.length} email-less records`);
+}
+console.log(`Enriching ${todo.length} agencies (${keep.length} kept), concurrency ${CONCURRENCY}\n`);
+
+const results = [...keep];
 let idx = 0, completed = 0;
 
 async function worker() {

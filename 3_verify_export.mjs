@@ -2,6 +2,7 @@
 // Input: agencies_enriched.json -> Output: agency_leads.csv
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolveMx } from 'node:dns/promises';
+import { cleanEmail, classifyEmail, pickOwner } from './lib.mjs';
 
 const TARGET = Number(process.argv[2]) || 300;
 
@@ -10,7 +11,32 @@ const ICP_MIN_TEAM = 2;
 const ICP_MAX_TEAM = 20;
 
 const recs = JSON.parse(readFileSync('agencies_enriched.json', 'utf8'));
-const reachable = recs.filter((r) => r.status === 'ok');
+
+// Re-derive owner + email classification from raw stage-2 output using the stricter
+// validators in lib.mjs. Stage 2's inline heuristics produced ~40% false-positive
+// owner names ("Team Matthew", "Direct Mail") and mislabeled role inboxes as personal.
+const reachable = recs
+  .filter((r) => r.status === 'ok')
+  .map((r) => {
+    const owner = pickOwner(r.people, r.name);
+
+    const emails = [...new Set((r.emails_all || []).map(cleanEmail).filter(Boolean))];
+    const classified = emails.map((e) => ({ e, kind: classifyEmail(e, owner.name) }));
+    const personal = classified.find((c) => c.kind === 'personal')?.e || null;
+    const generic = classified.find((c) => c.kind === 'generic')?.e || null;
+    const role = classified.find((c) => c.kind === 'role')?.e || cleanEmail(r.email_osm);
+
+    return {
+      ...r,
+      owner_name: owner.name,
+      owner_title: owner.title,
+      people: owner.others,
+      emails_all: emails,
+      email_personal: personal,
+      email_generic: generic,
+      email_role: role,
+    };
+  });
 
 // --- MX verification (catches dead domains, the #1 source of hard bounces) ---
 // NOTE: this is MX-only. We deliberately do NOT do SMTP RCPT probing — it is what
@@ -47,6 +73,7 @@ function score(r) {
   if (/founder|owner|ceo/i.test(r.owner_title || '')) { s += 8; why.push('owner-is-decisionmaker'); }
 
   if (r.email_personal) { s += 20; why.push('personal-email'); }
+  else if (r.email_generic) { s += 12; why.push('probable-personal-email'); }
   else if (r.email_role) { s += 8; why.push('role-email-only'); }
 
   const t = r.team_size_proxy;
@@ -64,12 +91,18 @@ function score(r) {
   return { s, why };
 }
 
+// Threshold of 1 (not 2) is what gets us to a 300-lead target. agency_score counts
+// matched marketing keywords, so >=1 still means the site says "seo"/"ppc"/"branding"
+// somewhere — but weak matches sink to the bottom via lead_score, which is the real
+// quality signal. Raise with MIN_AGENCY_SCORE=2 for a smaller, higher-confidence list.
+const MIN_AGENCY_SCORE = Number(process.env.MIN_AGENCY_SCORE) || 1;
+
 const scored = reachable
   .map((r) => ({ ...r, ...score(r) }))
-  .filter((r) => r.agency_score >= 2)          // must look like an agency
+  .filter((r) => r.agency_score >= MIN_AGENCY_SCORE) // must look like an agency
   .filter((r) => r.negative_signals.length === 0) // drop newspapers/franchises/printers
   .filter((r) => mxOk.get(r.domain))            // drop guaranteed bounces
-  .filter((r) => r.email_personal || r.email_role) // must be contactable
+  .filter((r) => r.email_personal || r.email_generic || r.email_role) // must be contactable
   .sort((a, b) => b.s - a.s);
 
 const top = scored.slice(0, TARGET);
@@ -83,8 +116,8 @@ const COLS = [
   ['agency_name', (r) => r.name],
   ['owner_name', (r) => r.owner_name],
   ['owner_title', (r) => r.owner_title],
-  ['email', (r) => r.email_personal || r.email_role],
-  ['email_type', (r) => (r.email_personal ? 'personal' : 'role')],
+  ['email', (r) => r.email_personal || r.email_generic || r.email_role],
+  ['email_type', (r) => (r.email_personal ? 'personal' : r.email_generic ? 'probable-personal' : 'role')],
   ['domain', (r) => r.domain],
   ['website', (r) => r.website],
   ['city', (r) => r.city],
@@ -112,8 +145,9 @@ console.log(`Reachable sites:      ${reachable.length}`);
 console.log(`Passed ICP filters:   ${scored.length}`);
 console.log(`Exported (target ${TARGET}): ${top.length}`);
 console.log(`  with owner name:    ${top.filter((r) => r.owner_name).length}`);
-console.log(`  with personal email:${top.filter((r) => r.email_personal).length}`);
-console.log(`  with role email:    ${top.filter((r) => !r.email_personal && r.email_role).length}`);
+console.log(`  personal email:     ${top.filter((r) => r.email_personal).length}`);
+console.log(`  probable-personal:  ${top.filter((r) => !r.email_personal && r.email_generic).length}`);
+console.log(`  role email only:    ${top.filter((r) => !r.email_personal && !r.email_generic).length}`);
 console.log(`  team size in ICP:   ${top.filter((r) => r.team_size_proxy >= ICP_MIN_TEAM && r.team_size_proxy <= ICP_MAX_TEAM).length}`);
 console.log(`\nScore range: ${top.at(-1)?.s} .. ${top[0]?.s}`);
 console.log(`\nWrote agency_leads.csv`);
