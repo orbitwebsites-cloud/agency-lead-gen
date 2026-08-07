@@ -20,8 +20,24 @@ const SENDER = { name: 'Alex', email: 'alex@orbitboyzz.me' };
 const REPLY_TO = { email: 'alex@orbitboyzz.me' };
 const POSTAL = 'OrbitBoyzz — 33 Florence Ave, Ewing, NJ 08618';
 
-const key = readFileSync('D:/StreamAPP/sd.txt', 'utf8').match(/Brevo_Key\s*=\s*(\S+)/i)?.[1];
-if (!key) { console.error('No Brevo key found in sd.txt'); process.exit(1); }
+// Env var first so the key never has to live in a file on disk.
+// Falls back to a local secrets file only if one happens to be there.
+function loadKey() {
+  if (process.env.BREVO_API_KEY) return process.env.BREVO_API_KEY.trim();
+  for (const p of ['./sd.txt', '../sd.txt', 'D:/StreamAPP/sd.txt']) {
+    try {
+      const m = readFileSync(p, 'utf8').match(/Brevo_Key\s*=\s*(\S+)/i);
+      if (m) { console.log(`(key loaded from ${p} — prefer $env:BREVO_API_KEY)`); return m[1]; }
+    } catch { /* not there, try next */ }
+  }
+  return null;
+}
+
+const key = loadKey();
+if (!key) {
+  console.error('No Brevo API key found.\n\nSet it first:\n  $env:BREVO_API_KEY = "xkeysib-..."\n');
+  process.exit(1);
+}
 
 // ---------- variants ----------
 const VARIANTS = {
