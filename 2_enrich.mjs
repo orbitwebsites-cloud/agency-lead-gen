@@ -168,6 +168,16 @@ async function enrichOne(rec) {
 }
 
 // ---- run with a concurrency pool + resume support ----
+if (!existsSync('agencies_raw.json')) {
+  console.error(
+    '\nagencies_raw.json not found — stage 1 has not completed.\n\n' +
+    'Run it first:\n  node 1_harvest_osm.mjs\n\n' +
+    'It prints "STAGE 1 COMPLETE" when done. If it exited before that, just run\n' +
+    'it again — finished selectors are cached and it resumes where it stopped.\n'
+  );
+  process.exit(1);
+}
+
 const raw = JSON.parse(readFileSync('agencies_raw.json', 'utf8'));
 const prior = existsSync('agencies_enriched.json')
   ? JSON.parse(readFileSync('agencies_enriched.json', 'utf8'))

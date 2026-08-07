@@ -7,3 +7,4 @@ agencies_enriched.json
 agency_leads.csv
 *.csv
 sent_log.jsonl
+.overpass_cache.json
