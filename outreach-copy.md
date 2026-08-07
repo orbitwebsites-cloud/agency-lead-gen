@@ -7,9 +7,15 @@ Leading with "you came up in my research" works because it's true — these lead
 came from a real geographic + service filter. It reads as specific rather than
 blasted, and it survives the obvious reply of "how did you find me?"
 
-Being upfront that it isn't built yet is a feature. "Would you use this?" gets
-replies from people who'd never answer a product pitch, and nobody feels misled
-when they ask for a demo.
+The copy says you're building and collecting requirements, without dwelling on
+launch status. "So I build what people want" is future tense — it signals work
+in progress rather than a shipped product, which is accurate.
+
+**Where this matters is the reply.** When someone answers "sounds interesting,
+can I see it?" — tell them straight that it's early and you're scoping with
+design partners. That answer converts fine; people back founders all the time.
+What doesn't survive is a demo call where they expected working software. One
+burned prospect in a niche this small talks to the others.
 
 All variants under 120 words. Merge fields: `{{first_name}}`, `{{agency_name}}`, `{{city}}`.
 
@@ -27,15 +33,15 @@ All variants under 120 words. Merge fields: `{{first_name}}`, `{{agency_name}}`,
 > campaign dashboards, and AI agents that draft proposals and briefs.
 > White-labelled, so it carries your brand.
 >
-> It's not built yet. I'm talking to owners first so I build what people
-> actually want instead of guessing.
+> I'm talking to owners first so I build what people actually want instead of
+> guessing.
 >
 > Worth 15 minutes to tell me what would make it useful for you? Early access
 > is free for anyone who helps shape it.
 >
 > — Alex
 
-*86 words*
+*79 words*
 
 ---
 
@@ -52,15 +58,14 @@ All variants under 120 words. Merge fields: `{{first_name}}`, `{{agency_name}}`,
 > proposals rewritten from scratch every time.
 >
 > I'm building one hub for that, with AI agents handling the repetitive
-> drafting. Pre-launch, collecting requirements from owners before I write a
-> line of it.
+> drafting. Collecting requirements from owners before I lock the roadmap.
 >
 > Real problem at {{agency_name}}, or have you already solved it? Genuinely
 > useful either way.
 >
 > — Alex
 
-*93 words*
+*88 words*
 
 ---
 
@@ -79,11 +84,11 @@ All variants under 120 words. Merge fields: `{{first_name}}`, `{{agency_name}}`,
 > domain monitoring side, and you keep 15% of what they spend, ongoing. Your
 > ops stack ends up paying for itself.
 >
-> Pre-launch and shaping the roadmap with owners now. Want to be one of them?
+> Shaping the roadmap with owners right now. Want to be one of them?
 >
 > — Alex
 
-*78 words*
+*77 words*
 
 ---
 
@@ -97,7 +102,6 @@ All variants under 120 words. Merge fields: `{{first_name}}`, `{{agency_name}}`,
 >
 > Quick version: I'm building agency ops software — projects, client
 > dashboards, AI agents for the proposals and briefs nobody wants to write.
-> Not built yet, which is exactly why I'm emailing.
 >
 > I'd rather build what owners actually want than guess. What wastes the most
 > time at {{agency_name}} right now?
@@ -106,7 +110,7 @@ All variants under 120 words. Merge fields: `{{first_name}}`, `{{agency_name}}`,
 >
 > — Alex
 
-*68 words*
+*60 words*
 
 > **On "yo":** highest-variance subject here. It reads as a peer for a young
 > founder-led shop and as unserious to a 45-year-old agency principal. Split it
@@ -126,14 +130,13 @@ All variants under 120 words. Merge fields: `{{first_name}}`, `{{agency_name}}`,
 > client campaign dashboards, and AI agents that draft the proposals and briefs
 > nobody wants to write. White-label, so it's your brand and not mine.
 >
-> Still pre-build. Doing this the boring way — talking to owners before writing
-> code.
+> Doing this the boring way — talking to owners before locking the roadmap.
 >
 > 15 minutes, and you get early access free if you help shape it.
 >
 > — Alex
 
-*81 words*
+*76 words*
 
 ---
 
